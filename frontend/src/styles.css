@@ -1,0 +1,155 @@
+:root {
+  color: #1f2933;
+  background: #f7f8fa;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 32px 0 40px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #7c3aed;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 760px;
+  margin-bottom: 12px;
+  font-size: clamp(2.2rem, 5vw, 4.3rem);
+  line-height: 1.02;
+}
+
+h2 {
+  margin-bottom: 18px;
+  font-size: 1.35rem;
+}
+
+h3 {
+  margin-bottom: 0;
+  font-size: 1rem;
+}
+
+.summary {
+  max-width: 720px;
+  margin-bottom: 0;
+  color: #52606d;
+  font-size: 1rem;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-ok {
+  border-color: #b7ebc6;
+  color: #176c35;
+  background: #e8f8ee;
+}
+
+.status-waiting {
+  border-color: #f1d8a8;
+  color: #8a5a13;
+  background: #fff7e6;
+}
+
+.workflow {
+  padding-top: 8px;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.module-card {
+  min-height: 220px;
+  padding: 20px;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.module-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.module-heading p {
+  margin-bottom: 4px;
+  color: #627d98;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #52606d;
+}
+
+li + li {
+  margin-top: 8px;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 24px, 1120px);
+    padding: 28px 0;
+  }
+
+  .hero {
+    display: block;
+  }
+
+  .hero .status {
+    margin-top: 18px;
+  }
+
+  .module-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

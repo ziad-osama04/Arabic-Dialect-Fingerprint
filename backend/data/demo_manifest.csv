@@ -1,0 +1,17 @@
+file_name,dialect,speaker_id,duration_seconds,transcript_ar,source,license,notes
+EGY_spk01.wav,EGY,EGY_spk01,30,,,,replace placeholder with real clip metadata
+EGY_spk02.wav,EGY,EGY_spk02,30,,,,replace placeholder with real clip metadata
+EGY_spk03.wav,EGY,EGY_spk03,30,,,,replace placeholder with real clip metadata
+EGY_spk04.wav,EGY,EGY_spk04,30,,,,replace placeholder with real clip metadata
+LAV_spk01.wav,LAV,LAV_spk01,30,,,,replace placeholder with real clip metadata
+LAV_spk02.wav,LAV,LAV_spk02,30,,,,replace placeholder with real clip metadata
+LAV_spk03.wav,LAV,LAV_spk03,30,,,,replace placeholder with real clip metadata
+LAV_spk04.wav,LAV,LAV_spk04,30,,,,replace placeholder with real clip metadata
+GLF_spk01.wav,GLF,GLF_spk01,30,,,,replace placeholder with real clip metadata
+GLF_spk02.wav,GLF,GLF_spk02,30,,,,replace placeholder with real clip metadata
+GLF_spk03.wav,GLF,GLF_spk03,30,,,,replace placeholder with real clip metadata
+GLF_spk04.wav,GLF,GLF_spk04,30,,,,replace placeholder with real clip metadata
+MAR_spk01.wav,MAR,MAR_spk01,30,,,,replace placeholder with real clip metadata
+MAR_spk02.wav,MAR,MAR_spk02,30,,,,replace placeholder with real clip metadata
+MAR_spk03.wav,MAR,MAR_spk03,30,,,,replace placeholder with real clip metadata
+MAR_spk04.wav,MAR,MAR_spk04,30,,,,replace placeholder with real clip metadata
