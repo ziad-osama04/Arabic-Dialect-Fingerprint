@@ -5,8 +5,15 @@ async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, options);
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed with status ${response.status}`);
+    let errorMessage = `Error ${response.status}`;
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.detail || errorMessage;
+    } catch {
+      const text = await response.text();
+      errorMessage = text || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
 
   const contentType = response.headers.get("content-type") ?? "";
@@ -38,8 +45,8 @@ export function uploadAudio(file) {
 }
 
 
-export function getSpectrogram(fileId) {
-  return request(`/audio/spectrogram?file_id=${encodeURIComponent(fileId)}`);
+export function getSpectrogram(fileId, showPeaks = true, overlayMode = "fingerprint") {
+  return request(`/audio/spectrogram?file_id=${encodeURIComponent(fileId)}&show_peaks=${showPeaks}&overlay_mode=${overlayMode}`);
 }
 
 
@@ -81,3 +88,6 @@ export function mixAudio(payload) {
   });
 }
 
+export function getFeatureEvolution(fileId) {
+  return request(`/audio/feature-evolution?file_id=${encodeURIComponent(fileId)}`);
+}

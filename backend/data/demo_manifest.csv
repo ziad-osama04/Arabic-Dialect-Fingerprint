@@ -1,17 +1,17 @@
-file_name,dialect,speaker_id,duration_seconds,transcript_ar,source,license,notes
-EGY_spk01.wav,EGY,EGY_spk01,30,,,,replace placeholder with real clip metadata
-EGY_spk02.wav,EGY,EGY_spk02,30,,,,replace placeholder with real clip metadata
-EGY_spk03.wav,EGY,EGY_spk03,30,,,,replace placeholder with real clip metadata
-EGY_spk04.wav,EGY,EGY_spk04,30,,,,replace placeholder with real clip metadata
-LAV_spk01.wav,LAV,LAV_spk01,30,,,,replace placeholder with real clip metadata
-LAV_spk02.wav,LAV,LAV_spk02,30,,,,replace placeholder with real clip metadata
-LAV_spk03.wav,LAV,LAV_spk03,30,,,,replace placeholder with real clip metadata
-LAV_spk04.wav,LAV,LAV_spk04,30,,,,replace placeholder with real clip metadata
-GLF_spk01.wav,GLF,GLF_spk01,30,,,,replace placeholder with real clip metadata
-GLF_spk02.wav,GLF,GLF_spk02,30,,,,replace placeholder with real clip metadata
-GLF_spk03.wav,GLF,GLF_spk03,30,,,,replace placeholder with real clip metadata
-GLF_spk04.wav,GLF,GLF_spk04,30,,,,replace placeholder with real clip metadata
-MAR_spk01.wav,MAR,MAR_spk01,30,,,,replace placeholder with real clip metadata
-MAR_spk02.wav,MAR,MAR_spk02,30,,,,replace placeholder with real clip metadata
-MAR_spk03.wav,MAR,MAR_spk03,30,,,,replace placeholder with real clip metadata
-MAR_spk04.wav,MAR,MAR_spk04,30,,,,replace placeholder with real clip metadata
+file_name,dialect,speaker_id,duration_seconds,transcript_ar,source,notes
+EGY_spk01.wav,EGY,EGY_spk01,30.5,أنا من القاهرة وبحب الأكل المصري جدا,ADI17,Egyptian Voice 1
+EGY_spk02.wav,EGY,EGY_spk02,29.8,الجو النهاردة حر قوي في الزمالك,ADI17,Egyptian Voice 2
+EGY_spk03.wav,EGY,EGY_spk03,31.2,ممكن نروح ناكل كشري عند أبو طارق,ADI17,Egyptian Voice 3
+EGY_spk04.wav,EGY,EGY_spk04,30.0,الفيلم ده كان جميل والتمثيل رائع,ADI17,Egyptian Voice 4
+LAV_spk01.wav,LAV,LAV_spk01,30.2,شلونك اليوم شو الأخبار بالشام,ADI17,Levantine Voice 1
+LAV_spk02.wav,LAV,LAV_spk02,29.5,بدنا نروح على الروشة ناكل مناقيش,ADI17,Levantine Voice 2
+LAV_spk03.wav,LAV,LAV_spk03,30.8,كتير حلوة الموسيقى اللي عم تسمعها,ADI17,Levantine Voice 3
+LAV_spk04.wav,LAV,LAV_spk04,31.5,بكرا في عندنا حفلة بعيد ميلاد رفيقي,ADI17,Levantine Voice 4
+GLF_spk01.wav,GLF,GLF_spk01,30.1,هلا والله كيف الحال يا الغالي,ADI17,Gulf Voice 1
+GLF_spk02.wav,GLF,GLF_spk02,30.7,الجو في دبي اليوم مرة حلو للصيد,ADI17,Gulf Voice 2
+GLF_spk03.wav,GLF,GLF_spk03,29.9,تعال نتقهوى بالمجلس ونشوف الربع,ADI17,Gulf Voice 3
+GLF_spk04.wav,GLF,GLF_spk04,30.4,السيارة الجديدة اللي شريتها سريعة وايد,ADI17,Gulf Voice 4
+MAR_spk01.wav,MAR,MAR_spk01,31.0,كيداير لاباس عليك كلشي مزيان,ADI17,Moroccan Voice 1
+MAR_spk02.wav,MAR,MAR_spk02,30.3,بغينا نمشيو لمراكش فهاد العطلة,ADI17,Moroccan Voice 2
+MAR_spk03.wav,MAR,MAR_spk03,29.7,الكسكس المغربي هو أحسن ماكلة فالعالم,ADI17,Moroccan Voice 3
+MAR_spk04.wav,MAR,MAR_spk04,30.6,تفرجت فالمنتخب البارح لعبو مزيان بزاف,ADI17,Moroccan Voice 4
