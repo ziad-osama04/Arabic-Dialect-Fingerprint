@@ -41,7 +41,7 @@ export default function AudioUploader({ onUploaded, onLoading }) {
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <h3 style={{ marginBottom: '8px' }}>Step 1: Upload Arabic Voice File</h3>
       <p className="summary" style={{ fontSize: '0.875rem' }}>
-        Select a WAV or MP3 file (around 30 seconds).
+        Select a WAV or MP3 file.
       </p>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

@@ -16,7 +16,12 @@ from services.feature_extractor import find_spectrogram_peaks
 
 router = APIRouter()
 UPLOAD_DIR = audio_utils.UPLOAD_DIR
-DEMO_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
+# Robust path to demo samples (works whether started from root or backend folder)
+BASE_DIR = Path(__file__).resolve().parents[1]
+DEMO_DIR = BASE_DIR / "data" / "raw"
+if not DEMO_DIR.exists():
+    # Fallback to root-relative if backend is started from root
+    DEMO_DIR = Path.cwd() / "backend" / "data" / "raw"
 
 
 class MixRequest(BaseModel):
@@ -306,12 +311,19 @@ DEMO_DIALECTS = ["EGY", "GLF", "LEV", "MAG"]
 
 @router.get("/demo-samples")
 async def list_demo_samples():
-    """List available test audio files from the Downloaded Test Samples folder."""
+    """List available test audio files from the demo data folder."""
     samples = []
+    print(f"Checking for demo samples in: {DEMO_DIR}")
+    if not DEMO_DIR.exists():
+        print(f"Warning: DEMO_DIR does not exist!")
+        return {"samples": []}
+        
     for dialect in DEMO_DIALECTS:
         dialect_dir = DEMO_DIR / dialect
         if not dialect_dir.is_dir():
+            print(f"Dialect dir not found: {dialect_dir}")
             continue
+        count = 0
         for p in sorted(dialect_dir.iterdir()):
             if p.suffix.lower() in AUDIO_EXTS:
                 samples.append({
@@ -319,6 +331,8 @@ async def list_demo_samples():
                     "filename": p.name,
                     "path": f"{dialect}/{p.name}",
                 })
+                count += 1
+        print(f"Found {count} samples for {dialect}")
     return {"samples": samples}
 
 

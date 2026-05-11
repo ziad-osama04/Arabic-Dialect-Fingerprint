@@ -5,6 +5,7 @@ import { getHealth, getDemoSamples, loadDemoSample, downloadDemos } from "./api/
 import AudioUploader from "./components/AudioUploader";
 import AudioPlayer from "./components/AudioPlayer";
 import SpectrogramViewer from "./components/SpectrogramViewer";
+import TranscriptionPanel from "./components/TranscriptionPanel";
 
 // Member 2 Components
 import ClassifierResult from "./components/ClassifierResult";
@@ -34,6 +35,7 @@ export default function App() {
 
   // Member 1 State
   const [activeFileData, setActiveFileData] = useState(null);
+  const [fileId, setFileId] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [loading, setLoading] = useState(false);
 
@@ -83,12 +85,38 @@ export default function App() {
       .catch(() => setDemoSamples([]));
   }, [apiReady]);
 
+  const onAudioReady = async (data) => {
+    setLoading(true); // Show global loading while transcribing
+    try {
+      // 1. Trigger transcription FIRST and wait for it to finish
+      await handleTranscribe(data.file_id);
+      
+      // 2. ONLY THEN set the IDs to trigger the UI panels
+      // This ensures TranscriptionPanel finds the words in the cache
+      setFileId(data.file_id);
+      setActiveFileData(data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTranscribe = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8000/transcribe/demo/${id}`, { method: 'POST' });
+      if (!res.ok) throw new Error("Transcription service failed");
+      return await res.json();
+    } catch (err) {
+      console.error("Transcription trigger failed:", err);
+      // We don't throw so the rest of the app (spectrogram/classifier) can still load
+    }
+  };
+
   const selectDemo = async (samplePath) => {
     setDemoLoading(true);
     setDemoError(null);
     try {
       const data = await loadDemoSample(samplePath);
-      setActiveFileData(data);
+      onAudioReady(data);
     } catch (err) {
       setDemoError(err.message || "Failed to load demo sample");
     } finally {
@@ -134,7 +162,7 @@ export default function App() {
             <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
               <div className="column">
                 <AudioUploader
-                  onUploaded={setActiveFileData}
+                  onUploaded={onAudioReady}
                   onLoading={setLoading}
                 />
 
@@ -246,12 +274,10 @@ export default function App() {
 
         {/* Transcribe Tab */}
         <div style={{ display: activeTab === "transcribe" ? "block" : "none" }}>
-          <div className="locked-card">
-            <div style={{ fontSize: '4rem', marginBottom: '24px' }}>✍️</div>
-            <h2>Member 3: Real-time STT</h2>
-            <p className="summary" style={{ margin: '0 auto 24px' }}>Word-level transcription and real-time synchronization with audio playback.</p>
-            <span className="badge-locked">Status: Waiting for Member 3 Integration</span>
-          </div>
+          <TranscriptionPanel 
+            fileId={fileId} 
+            currentTime={currentTime} 
+          />
         </div>
 
         {/* Translate Tab */}
