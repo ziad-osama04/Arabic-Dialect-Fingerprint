@@ -264,3 +264,11 @@ h1 {
     transform: translate3d(4px, 0, 0);
   }
 }
+@keyframes grow {
+  from {
+    box-shadow: 0px 0px 1em rgba(0,0,0,0.5);
+  }
+  to {
+    box-shadow: 0px 0px 3em rgba(139, 92, 246, 0.4);
+  }
+}

@@ -60,33 +60,26 @@ export default function AudioPlayer({ fileId, onTimeUpdate }) {
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <button 
-          className="btn" 
+          className="circle" 
           onClick={togglePlay}
           style={{ 
-            width: '72px', 
-            height: '72px', 
+            width: '80px', 
+            height: '80px', 
             borderRadius: '50%', 
-            background: 'var(--primary)', 
-            color: 'white', 
+            background: '#333', 
+            color: '#eee', 
             border: 'none', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
+            display: 'grid', 
+            placeContent: 'center',
             cursor: 'pointer',
-            boxShadow: '0 10px 25px -5px rgba(139, 92, 246, 0.5)',
+            animation: 'grow 1s infinite',
             flexShrink: 0,
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            transition: '0.5s ease-in'
           }}
         >
-          {isPlaying ? (
-            <svg viewBox="0 0 24 24" style={{ width: '40px', height: '40px', fill: 'white', display: 'block' }}>
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" style={{ width: '40px', height: '40px', fill: 'white', display: 'block', marginLeft: '6px' }}>
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-          )}
+          <span className="material-icons" style={{ fontSize: '40px' }}>
+            {isPlaying ? "pause_circle" : "play_circle"}
+          </span>
         </button>
 
         <div style={{ flex: 1 }}>
