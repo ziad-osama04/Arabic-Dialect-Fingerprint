@@ -15,7 +15,7 @@ from services.feature_extractor import find_spectrogram_peaks
 
 router = APIRouter()
 UPLOAD_DIR = audio_utils.UPLOAD_DIR
-DEMO_DIR = Path(__file__).resolve().parents[2] / "Downloaded Test Samples"
+DEMO_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
 
 
 class MixRequest(BaseModel):

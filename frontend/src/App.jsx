@@ -144,7 +144,7 @@ export default function App() {
                   )}
                   {demoSamples.length === 0 ? (
                     <p style={{ color: '#64748b', fontSize: '0.85rem' }}>
-                      No demo samples found. Run <code style={{ color: '#94a3b8' }}>python download.py</code> in the "Downloaded Test Samples" folder.
+                      No demo samples found. Make sure audio files are in <code style={{ color: '#94a3b8' }}>backend/data/raw</code>.
                     </p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
