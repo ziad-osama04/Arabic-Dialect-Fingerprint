@@ -7,7 +7,7 @@ import soundfile as sf
 
 TARGET_SR = 16000
 BASE_DIR = Path(__file__).resolve().parents[1]
-UPLOAD_DIR = BASE_DIR / "data" / "raw" / "uploads"
+UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 

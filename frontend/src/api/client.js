@@ -110,3 +110,8 @@ export function loadDemoSample(path) {
     body: JSON.stringify({ path }),
   });
 }
+export function downloadDemos() {
+  return request("/audio/download-demos", {
+    method: "POST",
+  });
+}

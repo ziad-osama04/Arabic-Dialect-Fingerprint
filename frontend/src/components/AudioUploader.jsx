@@ -46,36 +46,36 @@ export default function AudioUploader({ onUploaded, onLoading }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div className="file-input-wrapper" style={{ position: 'relative' }}>
-          <button 
-            className="btn" 
+          <button
+            className="btn"
             onClick={triggerFileSelect}
-            style={{ 
-              background: 'rgba(255,255,255,0.05)', 
-              color: 'white', 
+            style={{
+              background: 'rgba(255,255,255,0.05)',
+              color: 'white',
               border: '1px solid var(--border-card)',
               transition: 'all 0.2s'
             }}
           >
             {file ? "Change File" : "Choose File"}
           </button>
-          <input 
+          <input
             ref={fileInputRef}
-            type="file" 
-            accept=".wav,.mp3,.m4a" 
-            onChange={handleFileChange} 
-            style={{ display: 'none' }} 
+            type="file"
+            accept=".wav,.mp3,.m4a"
+            onChange={handleFileChange}
+            style={{ display: 'none' }}
           />
         </div>
-        
+
         {file && (
           <span style={{ fontSize: '0.875rem', color: 'var(--accent)', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
             {file.name}
           </span>
         )}
 
-        <button 
-          className="btn btn-primary" 
-          onClick={handleUpload} 
+        <button
+          className="btn btn-primary"
+          onClick={handleUpload}
           disabled={!file || uploading}
           style={{ opacity: (!file || uploading) ? 0.4 : 1, marginLeft: 'auto' }}
         >
@@ -84,12 +84,12 @@ export default function AudioUploader({ onUploaded, onLoading }) {
       </div>
 
       {error && (
-        <div style={{ 
-          color: '#ef4444', 
-          fontSize: '0.85rem', 
-          background: 'rgba(239, 68, 68, 0.05)', 
-          padding: '12px 16px', 
-          borderRadius: '12px', 
+        <div style={{
+          color: '#ef4444',
+          fontSize: '0.85rem',
+          background: 'rgba(239, 68, 68, 0.05)',
+          padding: '12px 16px',
+          borderRadius: '12px',
           border: '1px solid rgba(239, 68, 68, 0.2)',
           display: 'flex',
           alignItems: 'center',

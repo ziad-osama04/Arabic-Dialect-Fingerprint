@@ -1,4 +1,5 @@
 import base64
+import subprocess
 import io
 import shutil
 import uuid
@@ -353,3 +354,18 @@ async def load_demo_sample(req: LoadDemoRequest):
         "duration": audio_utils.duration_seconds(y, sr),
         "sample_rate": sr,
     }
+
+
+@router.post("/download-demos")
+async def trigger_demo_download():
+    """Trigger the download_async.py script to fetch demo samples."""
+    script_path = Path(__file__).resolve().parents[1] / "Audios" / "download_async.py"
+    if not script_path.exists():
+        raise HTTPException(status_code=404, detail="Download script not found.")
+
+    try:
+        # Run it in the background using python
+        subprocess.Popen(["python", str(script_path)])
+        return {"message": "Download started in background. Refresh in a few moments."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start download: {str(e)}")

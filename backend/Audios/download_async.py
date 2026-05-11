@@ -1,6 +1,4 @@
 import os
-import time
-import requests
 import asyncio
 import aiohttp
 from pathlib import Path
@@ -18,19 +16,21 @@ COUNTRY_TO_DIALECT = {
     "Maghrebi Arabic": "MAG"
 }
 
-SAMPLES_PER_DIALECT = 500
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SAMPLES_PER_DIALECT = 4
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = BASE_DIR / "data" / "raw"
 
-def fetch_rows(offset: int, length: int = 100) -> list[dict]:
+async def fetch_rows(session, offset: int, length: int = 100) -> list[dict]:
     url = f"{BASE_API}/rows?dataset={DATASET}&config={CONFIG}&split={SPLIT}&offset={offset}&length={length}"
     for _ in range(5):
         try:
-            resp = requests.get(url, timeout=60)
-            resp.raise_for_status()
-            return resp.json().get("rows", [])
-        except requests.exceptions.RequestException as e:
+            async with session.get(url, timeout=60) as resp:
+                resp.raise_for_status()
+                data = await resp.json()
+                return data.get("rows", [])
+        except Exception as e:
             print(f"API Error {e}, retrying in 3s...")
-            time.sleep(3)
+            await asyncio.sleep(3)
     return []
 
 async def download_audio(session, url, dest_path):
@@ -49,7 +49,7 @@ async def main():
     needed = {country: SAMPLES_PER_DIALECT for country in COUNTRY_TO_DIALECT}
     
     for dialect_code in COUNTRY_TO_DIALECT.values():
-        os.makedirs(os.path.join(SCRIPT_DIR, dialect_code), exist_ok=True)
+        os.makedirs(DATA_DIR / dialect_code, exist_ok=True)
         
     offset = 0
     page_size = 100
@@ -61,7 +61,7 @@ async def main():
         downloading_counts = {c: 0 for c in COUNTRY_TO_DIALECT}
         
         while any(n > 0 for n in needed.values()):
-            rows = fetch_rows(offset, page_size)
+            rows = await fetch_rows(session, offset, page_size)
             if not rows:
                 break
                 
@@ -104,7 +104,7 @@ async def main():
                 segment_id = row.get("segment_id", f"sample_{offset}")
                 filename = f"{segment_id}.wav"
                 filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
-                dest = os.path.join(SCRIPT_DIR, dialect_code, filename)
+                dest = DATA_DIR / dialect_code / filename
                 
                 tasks.append(download_audio(session, audio_url, dest))
                 needed[dialect] -= 1
@@ -115,7 +115,7 @@ async def main():
                     
             print(f"Discovered samples so far: {downloading_counts}")
             offset += page_size
-            time.sleep(0.1)
+            await asyncio.sleep(0.1)
             
             if len(tasks) >= 50:
                 print(f"Downloading batch of {len(tasks)} files...")

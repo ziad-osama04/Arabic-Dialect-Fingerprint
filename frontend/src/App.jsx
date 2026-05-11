@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getHealth, getDemoSamples, loadDemoSample } from "./api/client.js";
+import { getHealth, getDemoSamples, loadDemoSample, downloadDemos } from "./api/client.js";
 
 // Member 1 Components
 import AudioUploader from "./components/AudioUploader";
@@ -67,12 +67,13 @@ export default function App() {
   const [demoSamples, setDemoSamples] = useState([]);
   const [demoLoading, setDemoLoading] = useState(false);
   const [demoError, setDemoError] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   const DIALECT_META = {
-    EGY: { name: "Egyptian", emoji: "🇪🇬", color: "#8b5cf6" },
-    GLF: { name: "Gulf", emoji: "🇦🇪", color: "#34d399" },
-    LEV: { name: "Levantine", emoji: "🇱🇧", color: "#38bdf8" },
-    MAG: { name: "Maghrebi", emoji: "🇲🇦", color: "#fb923c" },
+    EGY: { name: "Egyptian", color: "#8b5cf6" },
+    GLF: { name: "Gulf", color: "#34d399" },
+    LEV: { name: "Levantine", color: "#38bdf8" },
+    MAG: { name: "Maghrebi", color: "#fb923c" },
   };
 
   useEffect(() => {
@@ -138,7 +139,27 @@ export default function App() {
                 />
 
                 <div className="card" style={{ marginTop: '24px' }}>
-                  <h3 style={{ marginBottom: '16px', color: 'var(--accent)' }}>Quick Demo Library</h3>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h3 style={{ margin: 0, color: 'var(--accent)' }}>Quick Demo Library</h3>
+                    <button 
+                      className="btn-sm" 
+                      disabled={downloading}
+                      onClick={async () => {
+                        setDownloading(true);
+                        try {
+                          await downloadDemos();
+                          alert("Download started in background! Please wait a few moments and then refresh.");
+                        } catch (err) {
+                          alert("Failed to start download: " + err.message);
+                        } finally {
+                          setDownloading(false);
+                        }
+                      }}
+                      style={{ fontSize: '0.7rem', padding: '4px 8px' }}
+                    >
+                      {downloading ? "Starting..." : "📥 Download Demos"}
+                    </button>
+                  </div>
                   {demoError && (
                     <p style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: '12px' }}>{demoError}</p>
                   )}
@@ -154,7 +175,6 @@ export default function App() {
                         return (
                           <div key={code}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '1.1rem' }}>{meta.emoji}</span>
                               <span style={{ fontSize: '0.85rem', fontWeight: 600, color: meta.color }}>{code}</span>
                               <span style={{ fontSize: '0.75rem', color: '#64748b' }}>— {meta.name}</span>
                             </div>
