@@ -1,233 +1,109 @@
 # Arabic Dialect Fingerprint
 
-Task 5 web application for Arabic dialect detection from speech audio.
+A high-fidelity workstation for Arabic dialect identification, acoustic visualization, and explainable AI analysis. This project uses classic signal processing (no deep learning for classification) to distinguish between four major Arabic dialect groups.
 
-The app will:
+## 🌍 Supported Dialects
 
-1. Open an Arabic voice file around 30 seconds.
-2. Display the audio spectrogram.
-3. Identify the dialect using classic machine learning only.
-4. Show the acoustic features that governed the decision.
-5. Display spoken words in real time while the audio plays.
-6. Convert the transcript to another dialect and synthesize audio.
-7. Mix two audio files with a weighted slider and classify the mixed result.
+We have transitioned from country-specific labeling to robust regional groupings to ensure higher classification accuracy and better generalization:
 
-## Dialects
+| Code | Dialect Group | Region |
+|---|---|---|
+| **EGY** | Egyptian | Egypt |
+| **LEV** | Levantine | Lebanon, Syria, Jordan, Palestine |
+| **GLF** | Gulf | KSA, UAE, Kuwait, Qatar, Oman, Bahrain |
+| **MAG** | Maghrebi | Morocco, Algeria, Tunisia, Libya |
 
-The project targets four dialect groups:
+## 🚀 Key Features
 
-| Code | Dialect |
-|---|---|
-| EGY | Egyptian Arabic |
-| LAV | Levantine / Syrian-Lebanese Arabic |
-| GLF | Gulf / Khaleeji Arabic |
-| MAR | Moroccan Darija / Maghrebi Arabic |
+1.  **Acoustic Pipeline**: 
+    *   Upload 5–30s audio files.
+    *   Interactive Mel-spectrogram with **Acoustic Fingerprint** peak detection (Top 100 peaks).
+    *   Real-time feature evolution tracking (MFCC, Centroid, RMS).
+2.  **ML Classifier**:
+    *   State-of-the-art **SVM Classifier** (~86% accuracy).
+    *   SHAP-based **Explainability**: Understand *why* the model chose a dialect.
+    *   Dialect Similarity Radar: Comparison against regional acoustic averages.
+3.  **Data Engine**:
+    *   Asynchronous downloader for the **MADIS5** dataset.
+    *   Automatic feature extraction and speaker-aware training (no identity leakage).
+4.  **Mixed Mode** (Member 4): Weighted audio mixing with real-time classification shift.
 
-The demo must include 4 different voices per dialect, for 16 total demo clips.
+## 🛠️ Tech Stack
 
-## Team Ownership
+*   **Backend**: Python, FastAPI, Librosa, Scikit-learn, SHAP.
+*   **Frontend**: React, Vite, Vanilla CSS (Premium Dark Mode), Lucide Icons.
+*   **Dataset**: `badrex/MADIS5-spoken-arabic-dialects` (Hugging Face).
 
-| Member | Responsibility |
-|---|---|
-| Member 0 | Architecture, repo setup, integration, README, demo manifest |
-| Member 1 | Audio upload, playback, spectrogram, feature extraction |
-| Member 2 | Classic ML classifier, training, evaluation, explainability |
-| Member 3 | Real-time speech-to-text and word highlighting |
-| Member 4 | Dialect text conversion, TTS, weighted audio mixer |
+## 🏃 Getting Started
 
-Detailed plans are in:
-
-- `00_overall_project_plan.md`
-- `member0_architecture_integration.md`
-- `member1_audio_spectrogram_features.md`
-- `member2_classic_ml_classifier_explainability.md`
-- `member3_realtime_stt.md`
-- `member4_dialect_conversion_mixer.md`
-
-## Project Structure
-
-```text
-backend/
-  main.py
-  routers/
-  services/
-  models/
-  data/
-    raw/
-      EGY/
-      LAV/
-      GLF/
-      MAR/
-    features/
-    demo_manifest.csv
-frontend/
-  src/
-    api/
-    components/
-scripts/
-  prepare_dataset.py
-  validate_demo_data.py
-docs/
-  screenshots/
-```
-
-## Classic ML Rule
-
-Dialect classification must use only classic signal-processing features and scikit-learn style models.
-
-Allowed classification features:
-
-- MFCC and delta MFCC statistics.
-- Spectral centroid, rolloff, bandwidth, and contrast.
-- Zero crossing rate.
-- RMS energy.
-- Pitch/prosody/rhythm statistics.
-- Spectrogram peak/fingerprint statistics.
-
-Allowed classification models:
-
-- Random Forest.
-- SVM.
-- Logistic Regression.
-- KNN.
-- Gradient Boosting.
-- Other classic scikit-learn estimators.
-
-Do not use deep learning, Whisper embeddings, wav2vec embeddings, pretrained dialect classifiers, CNNs, RNNs, or Transformers for dialect classification.
-
-Pretrained helpers are allowed for STT, dialect text conversion, and TTS only.
-
-## Backend Setup
-
+### 1. Backend Setup
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate
+source venv/bin/activate  # venv\Scripts\activate on Windows
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload
 ```
 
-Backend health checks:
+### 2. Data Preparation (Optional)
+If you want to retrain the models or download more data:
+```bash
+# 1. Download MADIS5 data (500 samples per dialect)
+python backend/Audios/download_async.py
 
-```text
-http://localhost:8000/health
-http://localhost:8000/docs
+# 2. Extract features
+python scripts/prepare_dataset.py
+
+# 3. Train models (SVM, RF, KNN)
+python scripts/train_classifier.py
 ```
 
-## Frontend Setup
-
+### 3. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Open [http://localhost:5173](http://localhost:5173).
 
-Default frontend:
+## 📊 Classification Pipeline
 
-```text
-http://localhost:5173
-```
+Our "Classic ML" rule ensures the model remains lightweight and interpretable:
+*   **Features**: 13 MFCCs + Deltas, Spectral Centroid, Rolloff, Contrast, Zero Crossing Rate, RMS, Pitch/Prosody, and Peak Density.
+*   **Models**: Best performing is **SVM (RBF Kernel)** with balanced class weights.
+*   **Validation**: Uses `GroupShuffleSplit` to ensure that audio from a speaker in the training set never appears in the test set.
 
-Set a different backend URL with:
-
-```bash
-set VITE_API_BASE_URL=http://localhost:8000
-```
-
-## Demo Data Setup
-
-Place audio files here:
+## 🏗️ Project Structure
 
 ```text
-backend/data/raw/EGY/
-backend/data/raw/LAV/
-backend/data/raw/GLF/
-backend/data/raw/MAR/
+Arabic-Dialect-Fingerprint/
+├── backend/
+│   ├── Audios/        # Raw WAV files (EGY, GLF, LEV, MAG)
+│   ├── data/          # Feature CSVs and temporary uploads
+│   ├── models/        # Pickled models, scalers, and SHAP artifacts
+│   ├── routers/       # API Endpoints (audio, classify, etc.)
+│   └── services/      # Core logic (feature extraction, inference)
+├── frontend/
+│   └── src/
+│       ├── components/ # UI Widgets (Spectrogram, Classifier, etc.)
+│       └── api/        # Client-side API wrappers
+├── scripts/
+│   ├── prepare_dataset.py
+│   ├── train_classifier.py
+│   └── repopulate_demos.py
+└── Downloaded Test Samples/ # Quick-load clips for the UI
 ```
 
-Update:
+## 👥 Team Ownership
 
-```text
-backend/data/demo_manifest.csv
-```
-
-Required manifest fields:
-
-- `file_name`
-- `dialect`
-- `speaker_id`
-- `duration_seconds`
-- `transcript_ar`
-- `source`
-- `license`
-- `notes`
-
-Validate demo readiness:
-
-```bash
-python scripts/validate_demo_data.py
-```
-
-The validator is expected to fail until real audio files, transcripts, sources, and licenses are added.
-
-## Feature Dataset Preparation
-
-After Member 1 implements `backend/services/feature_extractor.py`, run:
-
-```bash
-python scripts/prepare_dataset.py
-```
-
-Output:
-
-```text
-backend/data/features/all_features.csv
-```
-
-Member 2 uses this file to train the classic ML classifier.
-
-## API Contract
-
-| Endpoint | Owner | Purpose |
+| Member | Focus | Status |
 |---|---|---|
-| `POST /audio/upload` | Member 1 | Upload audio and return `file_id` |
-| `GET /audio/file/{file_id}` | Member 1 | Serve uploaded audio |
-| `GET /audio/spectrogram` | Member 1 | Return spectrogram image |
-| `POST /audio/mix` | Member 4 | Create weighted audio mix |
-| `GET /classify/predict` | Member 2 | Return dialect probabilities |
-| `GET /classify/explain` | Member 2 | Return feature explanation |
-| `GET /transcribe/words` | Member 3 | Return timestamped words |
-| `GET /transcribe/stream` | Member 3 | Stream timestamped words |
-| `POST /translate/text` | Member 4 | Convert transcript to target dialect |
-| `POST /translate/synthesize` | Member 4 | Return target dialect speech |
+| **Member 1** | Audio, Spectrograms, Features | ✅ Integrated |
+| **Member 2** | ML Classifier & Explainability | ✅ Integrated |
+| **Member 3** | Real-time STT | ⏳ In Progress |
+| **Member 4** | Translation & Audio Mixing | ⏳ In Progress |
 
-## Final Demo Script
+---
+*Created for the Acoustic Fingerprinting Project — May 2026*
 
-1. Start backend and frontend.
-2. Upload an Egyptian demo file.
-3. Play audio and show live word highlighting.
-4. Show spectrogram.
-5. Run classifier and show Egyptian probability.
-6. Show top governing features and dialect comparison chart.
-7. Convert transcript to Levantine.
-8. Play synthesized target dialect audio.
-9. Upload Egyptian and Gulf files in the mixer.
-10. Test slider at 0%, 50%, and 100%.
-11. Show classifier probabilities shifting with the mix.
-
-## Current Member 0 Status
-
-Implemented:
-
-- Backend skeleton and router registration.
-- Shared audio utility module.
-- Placeholder module health routes.
-- Demo manifest template.
-- Demo validation script.
-- Dataset preparation script.
-- React/Vite frontend shell.
-- Shared frontend API client.
-- README and planning docs.
-
-Remaining work belongs to Members 1 to 4 according to their member files.
 
