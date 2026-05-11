@@ -2,10 +2,10 @@
 
 This script expects raw audio under:
 
-    backend/data/raw/EGY/*.wav
-    backend/data/raw/LAV/*.wav
-    backend/data/raw/GLF/*.wav
-    backend/data/raw/MAR/*.wav
+    backend/Audios/EGY/*.wav
+    backend/Audios/KSA/*.wav
+    backend/Audios/JOR/*.wav
+    backend/Audios/LEB/*.wav
 
 Member 1 must implement backend/services/feature_extractor.py before this script
 can produce the final all_features.csv file.
@@ -21,9 +21,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
-RAW_DIR = BACKEND / "data" / "raw"
-OUT_PATH = BACKEND / "data" / "features" / "all_features.csv"
-DIALECTS = ("EGY", "LAV", "GLF", "MAR")
+RAW_DIR = BACKEND / "Audios" 
+OUT_PATH = BACKEND / "data" / "all_features.csv"
+DIALECTS = ("EGY", "GLF", "LEV", "MAG")
 
 
 def ensure_backend_on_path() -> None:
@@ -69,7 +69,20 @@ def main() -> int:
     for dialect, path in iter_audio_files():
         y, sr = load_audio(path)
         y = trim_silence(y)
-        features = extract_features(y, sr)
+        duration = duration_seconds(y, sr)
+        
+        # Skip extremely short clips that might cause librosa errors (width=9 for delta)
+        # 0.5s at 22050Hz is plenty of frames.
+        if duration < 0.5:
+            print(f"  Skipping {path.name} (too short: {duration:.2f}s)")
+            continue
+            
+        try:
+            features = extract_features(y, sr)
+        except Exception as e:
+            print(f"  Error extracting features for {path.name}: {e}")
+            continue
+            
         rows.append(
             {
                 "file_name": path.name,

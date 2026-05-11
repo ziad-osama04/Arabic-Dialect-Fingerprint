@@ -55,6 +55,11 @@ export function classifyAudio(fileId) {
 }
 
 
+export function getClassifierExplanation(fileId) {
+  return request(`/classify/explain?file_id=${encodeURIComponent(fileId)}`);
+}
+
+
 export function getTranscriptionWords(fileId) {
   return request(`/transcribe/words?file_id=${encodeURIComponent(fileId)}`);
 }
@@ -90,4 +95,18 @@ export function mixAudio(payload) {
 
 export function getFeatureEvolution(fileId) {
   return request(`/audio/feature-evolution?file_id=${encodeURIComponent(fileId)}`);
+}
+
+
+export function getDemoSamples() {
+  return request("/audio/demo-samples");
+}
+
+
+export function loadDemoSample(path) {
+  return request("/audio/load-demo", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ path }),
+  });
 }

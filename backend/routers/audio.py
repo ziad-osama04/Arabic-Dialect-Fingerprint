@@ -1,5 +1,6 @@
 import base64
 import io
+import shutil
 import uuid
 from pathlib import Path
 import librosa
@@ -14,6 +15,7 @@ from services.feature_extractor import find_spectrogram_peaks
 
 router = APIRouter()
 UPLOAD_DIR = audio_utils.UPLOAD_DIR
+DEMO_DIR = Path(__file__).resolve().parents[2] / "Downloaded Test Samples"
 
 
 class MixRequest(BaseModel):
@@ -295,3 +297,59 @@ async def mix_audio(req: MixRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to mix audio: {str(e)}")
+
+
+AUDIO_EXTS = {".wav", ".mp3", ".flac", ".m4a", ".ogg"}
+DEMO_DIALECTS = ["EGY", "GLF", "LEV", "MAG"]
+
+
+@router.get("/demo-samples")
+async def list_demo_samples():
+    """List available test audio files from the Downloaded Test Samples folder."""
+    samples = []
+    for dialect in DEMO_DIALECTS:
+        dialect_dir = DEMO_DIR / dialect
+        if not dialect_dir.is_dir():
+            continue
+        for p in sorted(dialect_dir.iterdir()):
+            if p.suffix.lower() in AUDIO_EXTS:
+                samples.append({
+                    "dialect": dialect,
+                    "filename": p.name,
+                    "path": f"{dialect}/{p.name}",
+                })
+    return {"samples": samples}
+
+
+class LoadDemoRequest(BaseModel):
+    path: str  # e.g. "EGY/clip01.wav"
+
+
+@router.post("/load-demo")
+async def load_demo_sample(req: LoadDemoRequest):
+    """Copy a test sample from Downloaded Test Samples into uploads and return a file_id."""
+    # Validate path (only allow dialect/filename, no traversal)
+    parts = Path(req.path).parts
+    if len(parts) != 2 or parts[0] not in DEMO_DIALECTS:
+        raise HTTPException(status_code=400, detail="Invalid demo sample path.")
+
+    src = DEMO_DIR / req.path
+    if not src.exists() or not src.is_file():
+        raise HTTPException(status_code=404, detail="Demo sample not found.")
+
+    try:
+        y, sr = audio_utils.load_audio(src)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not load audio file.")
+
+    file_id = str(uuid.uuid4())
+    dest = UPLOAD_DIR / f"{file_id}.wav"
+    audio_utils.save_wav(dest, y, sr)
+
+    return {
+        "file_id": file_id,
+        "filename": src.name,
+        "dialect": parts[0],
+        "duration": audio_utils.duration_seconds(y, sr),
+        "sample_rate": sr,
+    }

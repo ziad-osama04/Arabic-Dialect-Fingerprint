@@ -147,16 +147,56 @@ export default function SpectrogramViewer({ fileId }) {
   const dragStart = useRef({ x: 0, y: 0 });
   const panStart = useRef({ x: 0, y: 0 });
 
+  const specCache = useRef({});
+  const evolveCache = useRef({});
+
+  // Clear caches when a completely new file is loaded
+  useEffect(() => {
+    specCache.current = {};
+    evolveCache.current = {};
+  }, [fileId]);
+
   useEffect(() => {
     if (!fileId) return;
+
+    const specKey = `${showPeaks}_${overlayMode}`;
+    const needsSpec = !specCache.current[specKey];
+    const needsEvolve = !evolveCache.current[fileId];
+
+    if (!needsSpec && !needsEvolve) {
+      setSpecData(specCache.current[specKey]);
+      setEvolveData(evolveCache.current[fileId]);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
-    Promise.all([
-      getSpectrogram(fileId, showPeaks, overlayMode),
-      getFeatureEvolution(fileId)
-    ])
+    const promises = [];
+    
+    if (needsSpec) {
+      promises.push(
+        getSpectrogram(fileId, showPeaks, overlayMode).then(res => {
+          specCache.current[specKey] = res;
+          return res;
+        })
+      );
+    } else {
+      promises.push(Promise.resolve(specCache.current[specKey]));
+    }
+
+    if (needsEvolve) {
+      promises.push(
+        getFeatureEvolution(fileId).then(res => {
+          evolveCache.current[fileId] = res;
+          return res;
+        })
+      );
+    } else {
+      promises.push(Promise.resolve(evolveCache.current[fileId]));
+    }
+
+    Promise.all(promises)
       .then(([spec, evolve]) => {
         setSpecData(spec);
         setEvolveData(evolve);
@@ -171,6 +211,7 @@ export default function SpectrogramViewer({ fileId }) {
     setZoom(1);
     setPanX(0);
     setPanY(0);
+    setSpectroOpacity(80);
   };
 
   const handleZoomChange = (val) => {

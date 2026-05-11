@@ -1,3 +1,4 @@
+# Arabic Dialect Fingerprint - API Entry point
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
