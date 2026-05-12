@@ -95,7 +95,7 @@ def synthesize_to_wav_bytes(text: str, dialect: str = "MSA", gender: str = "F", 
 
     headers = {
         "Content-Type": "application/json",
-        "X-API-Key": "esk_zJCyGLo0cJMOebRsQRfx7yTWfGA33Cc5" # Add if using registered tier
+        "X-API-Key": "" # Add if using registered tier
     }
 
     try:
