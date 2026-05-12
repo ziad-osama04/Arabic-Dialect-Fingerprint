@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from services import audio_utils
 from services.feature_extractor import find_spectrogram_peaks
+from services.pitch_service import estimate_pitch
 
 router = APIRouter()
 UPLOAD_DIR = audio_utils.UPLOAD_DIR
@@ -79,19 +80,18 @@ async def upload_audio(file: UploadFile = File(...)):
             temp_path.unlink()
 
 
+from fastapi.responses import FileResponse
+
 @router.get("/file/{file_id}")
 async def get_audio_file(file_id: str):
     """
-    Serve the audio file for browser playback.
+    Serve the audio file for browser playback with range request support (seeking).
     """
     path = UPLOAD_DIR / f"{file_id}.wav"
     if not path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     
-    with open(path, "rb") as f:
-        content = f.read()
-    
-    return Response(content=content, media_type="audio/wav")
+    return FileResponse(path, media_type="audio/wav")
 
 
 @router.get("/spectrogram")
@@ -383,3 +383,22 @@ async def trigger_demo_download():
         return {"message": "Download started in background. Refresh in a few moments."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to start download: {str(e)}")
+
+@router.get("/pitch/{file_id}")
+def get_pitch(file_id: str):
+    """
+    Estimate the median fundamental frequency (pitch) of an uploaded audio file.
+    """
+    if not file_id or not all(c.isalnum() or c == "-" for c in file_id):
+        raise HTTPException(400, "Invalid file ID.")
+    wav_path = UPLOAD_DIR / f"{file_id}.wav"
+    if not wav_path.exists():
+        raise HTTPException(404, "File not found.")
+
+    y, sr = audio_utils.load_audio(wav_path)
+    result = estimate_pitch(y, sr)
+    return {
+        "file_id": file_id,
+        "pitch": result["median_pitch"],
+        "gender_guess": result["gender_guess"]
+    }

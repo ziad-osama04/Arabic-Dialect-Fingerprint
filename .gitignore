@@ -45,7 +45,10 @@ uploads/
 *.ogg
 
 # Dataset and model artifacts
-backend/data/raw/
+!backend/data/raw/
+!backend/data/raw/**/*.wav
+!backend/data/raw/**/*.mp3
+!backend/data/raw/**/*.m4a
 backend/data/features/*.csv
 backend/models/*.pkl
 backend/models/*.joblib

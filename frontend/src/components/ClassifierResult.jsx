@@ -26,7 +26,7 @@ const placeholderStyle = {
   textAlign: "center",
 };
 
-export default function ClassifierResult({ fileId }) {
+export default function ClassifierResult({ fileId, onDialectDetected }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,6 +35,7 @@ export default function ClassifierResult({ fileId }) {
     if (!fileId) {
       setData(null);
       setError(null);
+      if (onDialectDetected) onDialectDetected(null);
       return;
     }
 
@@ -45,10 +46,16 @@ export default function ClassifierResult({ fileId }) {
 
     classifyAudio(fileId)
       .then((result) => {
-        if (!cancelled) setData(result);
+        if (!cancelled) {
+          setData(result);
+          if (onDialectDetected) onDialectDetected(result.dialect);
+        }
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) {
+          setError(err.message);
+          if (onDialectDetected) onDialectDetected(null);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

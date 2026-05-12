@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 
 async function request(path, options = {}) {
@@ -68,7 +68,7 @@ export function getTranscriptionWords(fileId) {
 export function translateText(payload) {
   return request("/translate/text", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 }
@@ -77,7 +77,7 @@ export function translateText(payload) {
 export async function synthesizeSpeech(payload) {
   const response = await request("/translate/synthesize", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
   const blob = await response.blob();
@@ -88,7 +88,7 @@ export async function synthesizeSpeech(payload) {
 export function mixAudio(payload) {
   return request("/audio/mix", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 }
@@ -106,7 +106,7 @@ export function getDemoSamples() {
 export function loadDemoSample(path) {
   return request("/audio/load-demo", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path }),
   });
 }
@@ -114,4 +114,8 @@ export function downloadDemos() {
   return request("/audio/download-demos", {
     method: "POST",
   });
+}
+
+export function getAudioPitch(fileId) {
+  return request(`/audio/pitch/${encodeURIComponent(fileId)}`);
 }

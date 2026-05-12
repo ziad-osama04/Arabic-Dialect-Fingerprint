@@ -1,70 +1,45 @@
-import { useEffect, useRef, useState } from "react";
+import React from "react";
 
-export default function AudioPlayer({ fileId, onTimeUpdate }) {
-  const audioRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-
-  const audioUrl = fileId ? `http://localhost:8000/audio/file/${fileId}` : null;
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-      onTimeUpdate?.(audio.currentTime);
-    };
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-    };
-
-    const handleEnded = () => {
-      setIsPlaying(false);
-    };
-
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-    audio.addEventListener("ended", handleEnded);
-
-    return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("ended", handleEnded);
-    };
-  }, [onTimeUpdate]);
-
-  const togglePlay = () => {
-    if (audioRef.current.paused) {
-      audioRef.current.play();
-      setIsPlaying(true);
-    } else {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const handleProgressChange = (e) => {
-    const time = parseFloat(e.target.value);
-    audioRef.current.currentTime = time;
-    setCurrentTime(time);
-  };
-
+export default function AudioPlayer({ 
+  fileId, 
+  currentTime, 
+  duration, 
+  isPlaying, 
+  onTogglePlay, 
+  onSeek 
+}) {
   if (!fileId) return null;
 
+  const [localTime, setLocalTime] = React.useState(currentTime);
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  // Sync local time with global time when not dragging
+  React.useEffect(() => {
+    if (!isDragging) {
+      setLocalTime(currentTime);
+    }
+  }, [currentTime, isDragging]);
+
+  const handleMouseDown = () => setIsDragging(true);
+  const handleMouseUp = (e) => {
+    const val = parseFloat(e.target.value);
+    setIsDragging(false);
+    onSeek(val);
+  };
+
+  const handleInputChange = (e) => {
+    setLocalTime(parseFloat(e.target.value));
+  };
+
   return (
-    <div className="card" style={{ marginTop: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-card)' }}>
-      <audio ref={audioRef} src={audioUrl} />
-      
+    <div className="card" style={{ marginTop: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-card)', padding: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <button 
           className="circle" 
-          onClick={togglePlay}
+          onClick={onTogglePlay}
           style={{ 
-            width: '80px', 
-            height: '80px', 
+            width: '60px', 
+            height: '60px', 
             borderRadius: '50%', 
             background: '#333', 
             color: '#eee', 
@@ -72,19 +47,18 @@ export default function AudioPlayer({ fileId, onTimeUpdate }) {
             display: 'grid', 
             placeContent: 'center',
             cursor: 'pointer',
-            animation: 'grow 1s infinite',
             flexShrink: 0,
             transition: '0.5s ease-in'
           }}
         >
-          <span className="material-icons" style={{ fontSize: '40px' }}>
+          <span className="material-icons" style={{ fontSize: '32px' }}>
             {isPlaying ? "pause_circle" : "play_circle"}
           </span>
         </button>
 
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>
-            <span>{formatTime(currentTime)}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+            <span>{formatTime(localTime)}</span>
             <span>{formatTime(duration)}</span>
           </div>
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -93,13 +67,17 @@ export default function AudioPlayer({ fileId, onTimeUpdate }) {
               min="0" 
               max={duration || 0} 
               step="0.1" 
-              value={currentTime} 
-              onChange={handleProgressChange}
+              value={localTime} 
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleMouseDown}
+              onMouseUp={handleMouseUp}
+              onTouchEnd={handleMouseUp}
+              onChange={handleInputChange}
               style={{ 
                 width: '100%', 
                 accentColor: 'var(--primary)', 
-                height: '6px', 
-                borderRadius: '3px',
+                height: '4px', 
+                borderRadius: '2px',
                 cursor: 'pointer'
               }}
             />

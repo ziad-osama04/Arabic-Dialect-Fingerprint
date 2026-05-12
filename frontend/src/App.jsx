@@ -1,126 +1,101 @@
-import { useEffect, useState } from "react";
-import { getHealth, getDemoSamples, loadDemoSample, downloadDemos } from "./api/client.js";
+import { useEffect, useState, useRef, memo } from "react";
+import { getHealth, API_BASE_URL } from "./api/client.js";
 
-// Member 1 Components
-import AudioUploader from "./components/AudioUploader";
-import AudioPlayer from "./components/AudioPlayer";
-import SpectrogramViewer from "./components/SpectrogramViewer";
-import TranscriptionPanel from "./components/TranscriptionPanel";
-
-// Member 2 Components
+// Member Components
+import AudioPipeline from "./components/AudioPipeline";
 import ClassifierResult from "./components/ClassifierResult";
 import FeatureExplanation from "./components/FeatureExplanation";
+import TranscriptionPanel from "./components/TranscriptionPanel";
+import ConversionPanel from "./components/ConversionPanel";
 
-
-
-const modules = [
-  { name: "audio", owner: "Member 1", label: "Audio, spectrogram, features" },
-  { name: "classify", owner: "Member 2", label: "Classic ML classifier" },
-  { name: "transcribe", owner: "Member 3", label: "Real-time STT" },
-  { name: "translate", owner: "Member 4", label: "Dialect conversion and TTS" },
-];
-
-
-function StatusPill({ ok }) {
-  return (
-    <span className={ok ? "status status-ok" : "status status-waiting"}>
-      {ok ? "Ready" : "Waiting"}
-    </span>
-  );
-}
-
+// Use components directly
+const MemoizedClassifierResult = ClassifierResult;
+const MemoizedFeatureExplanation = FeatureExplanation;
+const MemoizedConversionPanel = ConversionPanel;
 
 export default function App() {
   const [apiStatus, setApiStatus] = useState(null);
-
-  // Member 1 State
   const [activeFileData, setActiveFileData] = useState(null);
   const [fileId, setFileId] = useState(null);
   const [currentTime, setCurrentTime] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [audioTimestamp, setAudioTimestamp] = useState(Date.now());
+  const [words, setWords] = useState([]); // Lifted State
+  const [detectedDialect, setDetectedDialect] = useState(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
-
     async function loadStatus() {
       try {
         const health = await getHealth();
-        if (isMounted) {
-          setApiStatus(health);
-        }
+        if (isMounted) setApiStatus(health);
       } catch (error) {
-        if (isMounted) {
-          setApiStatus({ status: "offline", error: error.message });
-        }
+        if (isMounted) setApiStatus({ status: "offline", error: error.message });
       }
     }
-
     loadStatus();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  const apiReady = apiStatus?.status === "ok";
+  const onAudioReady = (data) => {
+    setFileId(data.file_id);
+    setActiveFileData(data);
+    setIsPlaying(false);
+    setAudioTimestamp(Date.now());
+    setWords([]); // Clear words for new file
+    setDetectedDialect(null); // Reset detection for new file
+    
+    // Auto-trigger transcription in background
+    handleTranscribe(data.file_id);
 
-  const [activeTab, setActiveTab] = useState("audio");
-
-  // Demo samples from Downloaded Test Samples folder
-  const [demoSamples, setDemoSamples] = useState([]);
-  const [demoLoading, setDemoLoading] = useState(false);
-  const [demoError, setDemoError] = useState(null);
-  const [downloading, setDownloading] = useState(false);
-
-  const DIALECT_META = {
-    EGY: { name: "Egyptian", color: "#8b5cf6" },
-    GLF: { name: "Gulf", color: "#34d399" },
-    LEV: { name: "Levantine", color: "#38bdf8" },
-    MAG: { name: "Maghrebi", color: "#fb923c" },
-  };
-
-  useEffect(() => {
-    if (!apiReady) return;
-    getDemoSamples()
-      .then((data) => setDemoSamples(data.samples || []))
-      .catch(() => setDemoSamples([]));
-  }, [apiReady]);
-
-  const onAudioReady = async (data) => {
-    setLoading(true); // Show global loading while transcribing
-    try {
-      // 1. Trigger transcription FIRST and wait for it to finish
-      await handleTranscribe(data.file_id);
-      
-      // 2. ONLY THEN set the IDs to trigger the UI panels
-      // This ensures TranscriptionPanel finds the words in the cache
-      setFileId(data.file_id);
-      setActiveFileData(data);
-    } finally {
-      setLoading(false);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
   };
 
   const handleTranscribe = async (id) => {
     try {
-      const res = await fetch(`http://localhost:8000/transcribe/demo/${id}`, { method: 'POST' });
-      if (!res.ok) throw new Error("Transcription service failed");
-      return await res.json();
+      // Trigger background task
+      await fetch(`${API_BASE_URL}/transcribe/demo/${id}`, { method: 'POST' });
+      
+      // Initial fetch to see if it's already done (for demos)
+      const res = await fetch(`${API_BASE_URL}/transcribe/words?file_id=${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWords(data.words || []);
+      }
     } catch (err) {
       console.error("Transcription trigger failed:", err);
-      // We don't throw so the rest of the app (spectrogram/classifier) can still load
     }
   };
 
-  const selectDemo = async (samplePath) => {
-    setDemoLoading(true);
-    setDemoError(null);
-    try {
-      const data = await loadDemoSample(samplePath);
-      onAudioReady(data);
-    } catch (err) {
-      setDemoError(err.message || "Failed to load demo sample");
-    } finally {
-      setDemoLoading(false);
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleTimeUpdate = (e) => {
+    const t = e.target.currentTime;
+    if (t === 0 && currentTime > 0.5) return;
+    setCurrentTime(t);
+  };
+
+  const handleLoadedMetadata = (e) => {
+    setDuration(e.target.duration);
+  };
+
+  const seek = (time) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time;
+      setCurrentTime(time);
     }
   };
 
@@ -135,163 +110,72 @@ export default function App() {
             visualization, and conversion using classic signal processing.
           </p>
         </div>
-        <StatusPill ok={apiReady} />
       </section>
 
-      {/* Tab Navigation */}
-      <nav className="tabs-nav">
-        {modules.map((m) => (
-          <button
-            key={m.name}
-            className={`tab-btn ${activeTab === m.name ? "active" : ""}`}
-            onClick={() => setActiveTab(m.name)}
-          >
-            {m.name === "audio" ? "Audio Pipeline" :
-              m.name === "classify" ? "ML Classifier" :
-                m.name === "transcribe" ? "Real-time STT" :
-                  "Conversion"}
-          </button>
-        ))}
-      </nav>
+      {fileId && (
+        <audio
+          ref={audioRef}
+          key={fileId}
+          src={`${API_BASE_URL}/audio/file/${fileId}?t=${audioTimestamp}`}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => setIsPlaying(false)}
+        />
+      )}
 
-      {/* Tab Content */}
-      <div className="tab-content">
-        {/* Audio Tab */}
-        <div style={{ display: activeTab === "audio" ? "block" : "none" }}>
-          <section className="member-work-area">
-            <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
-              <div className="column">
-                <AudioUploader
-                  onUploaded={onAudioReady}
-                  onLoading={setLoading}
-                />
+      <div className="scrolling-content" style={{ display: 'flex', flexDirection: 'column', gap: '80px', paddingBottom: '100px' }}>
 
-                <div className="card" style={{ marginTop: '24px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                    <h3 style={{ margin: 0, color: 'var(--accent)' }}>Quick Demo Library</h3>
-                    <button 
-                      className="btn-sm" 
-                      disabled={downloading}
-                      onClick={async () => {
-                        setDownloading(true);
-                        try {
-                          await downloadDemos();
-                          alert("Download started in background! Please wait a few moments and then refresh.");
-                        } catch (err) {
-                          alert("Failed to start download: " + err.message);
-                        } finally {
-                          setDownloading(false);
-                        }
-                      }}
-                      style={{ fontSize: '0.7rem', padding: '4px 8px' }}
-                    >
-                      {downloading ? "Starting..." : "📥 Download Demos"}
-                    </button>
-                  </div>
-                  {demoError && (
-                    <p style={{ color: '#f87171', fontSize: '0.85rem', marginBottom: '12px' }}>{demoError}</p>
-                  )}
-                  {demoSamples.length === 0 ? (
-                    <p style={{ color: '#64748b', fontSize: '0.85rem' }}>
-                      No demo samples found. Make sure audio files are in <code style={{ color: '#94a3b8' }}>backend/data/raw</code>.
-                    </p>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      {Object.entries(DIALECT_META).map(([code, meta]) => {
-                        const clips = demoSamples.filter(s => s.dialect === code);
-                        if (clips.length === 0) return null;
-                        return (
-                          <div key={code}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: meta.color }}>{code}</span>
-                              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>— {meta.name}</span>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                              {clips.map(clip => (
-                                <button
-                                  key={clip.path}
-                                  className="btn"
-                                  disabled={demoLoading}
-                                  style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    color: 'white',
-                                    fontSize: '0.75rem',
-                                    justifyContent: 'flex-start',
-                                    opacity: demoLoading ? 0.5 : 1,
-                                    borderLeft: `3px solid ${meta.color}`,
-                                    padding: '8px 12px',
-                                  }}
-                                  onClick={() => selectDemo(clip.path)}
-                                >
-                                  <span style={{ marginRight: '6px' }}>🎙️</span>
-                                  {clip.filename.length > 20
-                                    ? clip.filename.slice(0, 18) + '…'
-                                    : clip.filename}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+        {/* Section 1: Audio Pipeline */}
+        <AudioPipeline
+          onAudioReady={onAudioReady}
+          activeFileData={activeFileData}
+          currentTime={currentTime}
+          duration={duration}
+          isPlaying={isPlaying}
+          onTogglePlay={togglePlay}
+          onSeek={seek}
+        />
 
-                {activeFileData && (
-                  <AudioPlayer
-                    fileId={activeFileData.file_id}
-                    onTimeUpdate={setCurrentTime}
-                  />
-                )}
-              </div>
-
-              <div className="column">
-                {activeFileData ? (
-                  <SpectrogramViewer
-                    fileId={activeFileData.file_id}
-                  />
-                ) : (
-                  <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '300px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '16px', opacity: 0.5 }}>📊</div>
-                    <h3 style={{ color: 'var(--text-muted)' }}>Ready for Input</h3>
-                    <p className="summary" style={{ fontSize: '0.9rem' }}>Upload a file or select a demo to visualize its acoustic fingerprint.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        </div>
-
-        {/* Classify Tab */}
-        <div style={{ display: activeTab === "classify" ? "block" : "none" }}>
-          <section className="member-work-area">
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
-              <ClassifierResult fileId={activeFileData?.file_id ?? null} />
-              <FeatureExplanation fileId={activeFileData?.file_id ?? null} />
-            </div>
-          </section>
-        </div>
-
-        {/* Transcribe Tab */}
-        <div style={{ display: activeTab === "transcribe" ? "block" : "none" }}>
-          <TranscriptionPanel 
-            fileId={fileId} 
-            currentTime={currentTime} 
-          />
-        </div>
-
-        {/* Translate Tab */}
-        <div style={{ display: activeTab === "translate" ? "block" : "none" }}>
-          <div className="locked-card">
-            <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🌍</div>
-            <h2>Member 4: Dialect Conversion & TTS</h2>
-            <p className="summary" style={{ margin: '0 auto 24px' }}>Text translation and speech synthesis into target dialects (EGY, GLF, LEV, MAG).</p>
-            <span className="badge-locked">Status: Waiting for Member 4 Integration</span>
+        {/* Section 2: ML Classifier */}
+        <section className="classifier-section">
+          <div className="section-header" style={{ marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '2rem', margin: 0 }}>2. ML Classifier</h2>
+            <p style={{ color: 'var(--text-muted)', margin: '8px 0 0' }}>Detect dialect probabilities and analyze feature importance (SHAP).</p>
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
+            <MemoizedClassifierResult fileId={fileId} onDialectDetected={setDetectedDialect} />
+            <MemoizedFeatureExplanation fileId={fileId} />
+          </div>
+        </section>
+
+        {/* Section 3: Real-time STT */}
+        <section className="transcription-section">
+          <div className="section-header" style={{ marginBottom: '32px' }}>
+            <h2 style={{ fontSize: '2rem', margin: 0 }}>3. Real-time STT</h2>
+            <p style={{ color: 'var(--text-muted)', margin: '8px 0 0' }}>Synchronized Arabic speech recognition with word-level timing.</p>
+          </div>
+          <TranscriptionPanel
+            fileId={fileId}
+            currentTime={currentTime}
+            duration={duration}
+            isPlaying={isPlaying}
+            onTogglePlay={togglePlay}
+            onSeek={seek}
+            words={words}
+            setWords={setWords}
+          />
+        </section>
+
+        {/* Section 4: Conversion */}
+        <div id="section-conversion">
+          <MemoizedConversionPanel 
+            words={words} 
+            currentTime={currentTime} 
+            detectedDialect={detectedDialect}
+          />
         </div>
 
       </div>
     </main>
   );
 }
-

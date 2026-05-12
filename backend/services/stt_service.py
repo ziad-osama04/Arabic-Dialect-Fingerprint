@@ -64,8 +64,18 @@ def transcribe(audio_path: str | Path) -> list[dict]:
     logger.info(f"Transcribing audio file: {audio_path}")
     
     # transcribe() returns a generator of segments
-    # beam_size=5 is a good balance for speed/accuracy
-    segments, info = model.transcribe(audio_path, beam_size=5, word_timestamps=True)
+    try:
+        segments, info = model.transcribe(audio_path, beam_size=5, word_timestamps=True)
+        # We need to force evaluation of the generator to catch errors now
+        segments = list(segments)
+    except Exception as e:
+        logger.error(f"Transcription failed on primary device: {e}")
+        logger.info("Forcing fallback to CPU...")
+        global _model
+        _model = WhisperModel("small", device="cpu", compute_type="int8")
+        model = _model
+        segments_gen, info = model.transcribe(audio_path, beam_size=5, word_timestamps=True)
+        segments = list(segments_gen)
     
     logger.info(f"Detected language: {info.language} ({info.language_probability:.2f})")
 

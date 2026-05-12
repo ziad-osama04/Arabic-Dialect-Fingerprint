@@ -21,7 +21,7 @@ def transcribe_health():
     }
 
 @router.post("")
-async def upload_and_transcribe(file: UploadFile = File(...)):
+def upload_and_transcribe(file: UploadFile = File(...)):
     """Upload a file and get its transcription immediately."""
     file_id = str(uuid.uuid4())
     file_ext = os.path.splitext(file.filename)[1]
@@ -31,7 +31,7 @@ async def upload_and_transcribe(file: UploadFile = File(...)):
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     
     with open(file_path, "wb") as buffer:
-        buffer.write(await file.read())
+        buffer.write(file.file.read())
     
     try:
         words = transcribe(file_path)
@@ -43,14 +43,14 @@ async def upload_and_transcribe(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
 
 @router.get("/words")
-async def get_words(file_id: str):
+def get_words(file_id: str):
     """Retrieve words for a previously transcribed file."""
     if file_id not in transcriptions_cache:
         raise HTTPException(status_code=404, detail="Transcription not found in cache")
     return {"words": transcriptions_cache[file_id]}
 
 @router.post("/demo/{file_id}")
-async def transcribe_demo(file_id: str):
+def transcribe_demo(file_id: str):
     """Transcribe an existing demo file by ID."""
     # Search for the file in the data/raw subdirectories
     DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"

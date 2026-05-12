@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import ReactDOM from "react-dom";
 import { getSpectrogram, getFeatureEvolution } from "../api/client";
 
@@ -58,7 +58,6 @@ function FingerprintPeak({ peak, bbox }) {
     setMousePos({ x: e.clientX, y: e.clientY });
   };
 
-  // Figure out if tooltip should go above or below the cursor
   const showAbove = mousePos.y > window.innerHeight / 2;
   const showLeft = mousePos.x > window.innerWidth * 0.7;
 
@@ -129,7 +128,7 @@ function FingerprintPeak({ peak, bbox }) {
   );
 }
 
-export default function SpectrogramViewer({ fileId }) {
+const SpectrogramViewer = ({ fileId }) => {
   const [specData, setSpecData] = useState(null);
   const [evolveData, setEvolveData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -150,7 +149,6 @@ export default function SpectrogramViewer({ fileId }) {
   const specCache = useRef({});
   const evolveCache = useRef({});
 
-  // Clear caches when a completely new file is loaded
   useEffect(() => {
     specCache.current = {};
     evolveCache.current = {};
@@ -243,9 +241,7 @@ export default function SpectrogramViewer({ fileId }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-      {/* 1. Acoustic Signature Card */}
       <div className="card">
-        {/* Card Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <h3 style={{ margin: 0 }}>Acoustic Fingerprint</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -290,7 +286,6 @@ export default function SpectrogramViewer({ fileId }) {
           </div>
         </div>
 
-        {/* Display Mode Selector */}
         <div style={{ display: "flex", gap: "6px", marginBottom: "16px", padding: "4px", background: "rgba(0,0,0,0.3)", borderRadius: "12px", border: "1px solid var(--border-card)" }}>
           {[
             { key: "plain", label: "Plain Mel", icon: "▦" },
@@ -324,7 +319,6 @@ export default function SpectrogramViewer({ fileId }) {
           ))}
         </div>
 
-        {/* Visual Controls Bar */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr 1fr",
@@ -370,7 +364,6 @@ export default function SpectrogramViewer({ fileId }) {
           </div>
         </div>
 
-        {/* Global Opacity Slider (Row 2) */}
         {overlayMode === "mfcc" && (
           <div style={{
             marginBottom: "20px",
@@ -464,7 +457,6 @@ export default function SpectrogramViewer({ fileId }) {
         </div>
       </div>
 
-      {/* 2. Spectral Dynamics Card */}
       <div className="card">
         <h3 style={{ margin: "0 0 20px" }}>Spectral Dynamics</h3>
 
@@ -490,4 +482,6 @@ export default function SpectrogramViewer({ fileId }) {
       </div>
     </div>
   );
-}
+};
+
+export default memo(SpectrogramViewer);
