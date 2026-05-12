@@ -13,7 +13,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 # API Configuration
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = ""
 # Ordered list of free models to try (fallback chain)
 FREE_MODELS = [
     "nvidia/nemotron-3-super-120b-a12b:free",
